@@ -58,7 +58,7 @@ class ConvTasNet(nn.Module):
         n_basis, kernel_size, stride=None, enc_basis=None, dec_basis=None,
         sep_hidden_channels=256, sep_bottleneck_channels=128, sep_skip_channels=128, sep_kernel_size=3, sep_num_blocks=3, sep_num_layers=8,
         dilated=True, separable=True,
-        sep_nonlinear='prelu', sep_norm=True, mask_nonlinear='sigmoid',
+        sep_nonlinear='prelu', sep_norm=True,use_batch_norm=False, mask_nonlinear='sigmoid',
         causal=True,
         n_sources=2,
         eps=EPS,
@@ -96,6 +96,7 @@ class ConvTasNet(nn.Module):
 
         self.dilated, self.separable, self.causal = dilated, separable, causal
         self.sep_nonlinear, self.sep_norm = sep_nonlinear, sep_norm
+        self.use_batch_norm = use_batch_norm
         self.mask_nonlinear = mask_nonlinear
 
         self.n_sources = n_sources
@@ -108,7 +109,7 @@ class ConvTasNet(nn.Module):
         self.separator = Separator(
             n_basis, bottleneck_channels=sep_bottleneck_channels, hidden_channels=sep_hidden_channels, skip_channels=sep_skip_channels,
             kernel_size=sep_kernel_size, num_blocks=sep_num_blocks, num_layers=sep_num_layers,
-            dilated=dilated, separable=separable, causal=causal, nonlinear=sep_nonlinear, norm=sep_norm, mask_nonlinear=mask_nonlinear,
+            dilated=dilated, separable=separable, causal=causal, nonlinear=sep_nonlinear, norm=sep_norm,use_batch_norm=use_batch_norm, mask_nonlinear=mask_nonlinear,
             n_sources=n_sources, eps=eps
         )
         self.decoder = decoder
@@ -186,6 +187,7 @@ class ConvTasNet(nn.Module):
             'causal': self.causal,
             'sep_nonlinear': self.sep_nonlinear,
             'sep_norm': self.sep_norm,
+            'use_batch_norm': self.use_batch_norm,
             'mask_nonlinear': self.mask_nonlinear,
             'n_sources': self.n_sources,
             'eps': self.eps
@@ -214,6 +216,7 @@ class ConvTasNet(nn.Module):
 
         dilated, separable, causal = config['dilated'], config['separable'], config['causal']
         sep_nonlinear, sep_norm = config['sep_nonlinear'], config['sep_norm']
+        use_batch_norm = config.get('use_batch_norm') or 0
         mask_nonlinear = config['mask_nonlinear']
 
         n_sources = config['n_sources']
@@ -225,7 +228,7 @@ class ConvTasNet(nn.Module):
             window_fn=window_fn, enc_onesided=enc_onesided, enc_return_complex=enc_return_complex,
             sep_hidden_channels=sep_hidden_channels, sep_bottleneck_channels=sep_bottleneck_channels, sep_skip_channels=sep_skip_channels,
             sep_kernel_size=sep_kernel_size, sep_num_blocks=sep_num_blocks, sep_num_layers=sep_num_layers,
-            dilated=dilated, separable=separable, causal=causal, sep_nonlinear=sep_nonlinear, sep_norm=sep_norm, mask_nonlinear=mask_nonlinear,
+            dilated=dilated, separable=separable, causal=causal, sep_nonlinear=sep_nonlinear, sep_norm=sep_norm, use_batch_norm=use_batch_norm, mask_nonlinear=mask_nonlinear,
             n_sources=n_sources,
             eps=eps
         )
@@ -322,7 +325,7 @@ class ConvTasNet(nn.Module):
 class Separator(nn.Module):
     def __init__(
         self, num_features, bottleneck_channels=128, hidden_channels=256, skip_channels=128, kernel_size=3, num_blocks=3, num_layers=8,
-        dilated=True, separable=True, causal=True, nonlinear='prelu', norm=True, mask_nonlinear='sigmoid',
+        dilated=True, separable=True, causal=True, nonlinear='prelu', norm=True,use_batch_norm=False, mask_nonlinear='sigmoid',
         n_sources=2,
         eps=EPS
     ):
@@ -335,7 +338,7 @@ class Separator(nn.Module):
         self.bottleneck_conv1d = nn.Conv1d(num_features, bottleneck_channels, kernel_size=1, stride=1)
         self.tdcn = TimeDilatedConvNet(
             bottleneck_channels, hidden_channels=hidden_channels, skip_channels=skip_channels, kernel_size=kernel_size, num_blocks=num_blocks, num_layers=num_layers,
-            dilated=dilated, separable=separable, causal=causal, nonlinear=nonlinear, norm=norm
+            dilated=dilated, separable=separable, causal=causal, nonlinear=nonlinear, norm=norm, use_batch_norm=use_batch_norm,
         )
         self.prelu = nn.PReLU()
         self.mask_conv1d = nn.Conv1d(skip_channels, n_sources*num_features, kernel_size=1, stride=1)

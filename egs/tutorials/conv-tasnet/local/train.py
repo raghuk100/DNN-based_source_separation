@@ -39,6 +39,7 @@ parser.add_argument('--separable', type=int, default=1, help='Depthwise-separabl
 parser.add_argument('--causal', type=int, default=0, help='Causality')
 parser.add_argument('--sep_nonlinear', type=str, default=None, help='Non-linear function of separator')
 parser.add_argument('--sep_norm', type=int, default=1, help='Normalization')
+parser.add_argument('--use_batch_norm', type=int, default=1, help='BN in seperator')
 parser.add_argument('--mask_nonlinear', type=str, default='sigmoid', help='Non-linear function of mask estiamtion')
 parser.add_argument('--n_sources', type=int, default=None, help='# speakers')
 parser.add_argument('--criterion', type=str, default='sisdr', choices=['sisdr'], help='Criterion')
@@ -76,7 +77,7 @@ def main(args):
         window_fn=args.window_fn, enc_onesided=args.enc_onesided, enc_return_complex=args.enc_return_complex,
         sep_hidden_channels=args.sep_hidden_channels, sep_bottleneck_channels=args.sep_bottleneck_channels, sep_skip_channels=args.sep_skip_channels,
         sep_kernel_size=args.sep_kernel_size, sep_num_blocks=args.sep_num_blocks, sep_num_layers=args.sep_num_layers,
-        dilated=args.dilated, separable=args.separable, causal=args.causal, sep_nonlinear=args.sep_nonlinear, sep_norm=args.sep_norm, mask_nonlinear=args.mask_nonlinear,
+        dilated=args.dilated, separable=args.separable, causal=args.causal, sep_nonlinear=args.sep_nonlinear, sep_norm=args.sep_norm,use_batch_norm=args.use_batch_norm, mask_nonlinear=args.mask_nonlinear,
         n_sources=args.n_sources
     )
     print(model)

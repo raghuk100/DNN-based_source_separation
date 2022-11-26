@@ -41,7 +41,7 @@ class TimeDilatedConvNet(nn.Module):
         return output
 
 class TimeDilatedConvBlock1d(nn.Module):
-    def __init__(self, num_features, hidden_channels=256, skip_channels=256, kernel_size=3, num_layers=10, dilated=True, separable=False, causal=True, nonlinear=None, norm=True, dual_head=True, eps=EPS):
+    def __init__(self, num_features, hidden_channels=256, skip_channels=256, kernel_size=3, num_layers=10, dilated=True, separable=False, causal=True, nonlinear=None, norm=True, use_batch_norm=False, dual_head=True, eps=EPS):
         super().__init__()
 
         self.num_layers = num_layers
@@ -56,9 +56,9 @@ class TimeDilatedConvBlock1d(nn.Module):
                 dilation = 1
                 stride = 2
             if not dual_head and idx == num_layers - 1:
-                net.append(ResidualBlock1d(num_features, hidden_channels=hidden_channels, skip_channels=skip_channels, kernel_size=kernel_size, stride=stride, dilation=dilation, separable=separable, causal=causal, nonlinear=nonlinear, norm=norm, dual_head=False, eps=eps))
+                net.append(ResidualBlock1d(num_features, hidden_channels=hidden_channels, skip_channels=skip_channels, kernel_size=kernel_size, stride=stride, dilation=dilation, separable=separable, causal=causal, nonlinear=nonlinear, norm=norm, use_batch_norm=use_batch_norm, dual_head=False, eps=eps))
             else:
-                net.append(ResidualBlock1d(num_features, hidden_channels=hidden_channels, skip_channels=skip_channels, kernel_size=kernel_size, stride=stride, dilation=dilation, separable=separable, causal=causal, nonlinear=nonlinear, norm=norm, dual_head=True, eps=eps))
+                net.append(ResidualBlock1d(num_features, hidden_channels=hidden_channels, skip_channels=skip_channels, kernel_size=kernel_size, stride=stride, dilation=dilation, separable=separable, causal=causal, nonlinear=nonlinear, norm=norm, use_batch_norm=use_batch_norm, dual_head=True, eps=eps))
 
         self.net = nn.Sequential(*net)
 
@@ -75,7 +75,7 @@ class TimeDilatedConvBlock1d(nn.Module):
         return x, skip_connection
 
 class ResidualBlock1d(nn.Module):
-    def __init__(self, num_features, hidden_channels=256, skip_channels=256, kernel_size=3, stride=2, dilation=1, separable=False, causal=True, nonlinear=None, norm=True, dual_head=True, eps=EPS):
+    def __init__(self, num_features, hidden_channels=256, skip_channels=256, kernel_size=3, stride=2, dilation=1, separable=False, causal=True, nonlinear=None, norm=True, use_batch_norm=False, dual_head=True, eps=EPS):
         super().__init__()
 
         self.kernel_size, self.stride, self.dilation = kernel_size, stride, dilation
@@ -95,10 +95,13 @@ class ResidualBlock1d(nn.Module):
             self.nonlinear = False
 
         if norm:
-            norm_name = 'cLN' if causal else 'gLN'
+            if use_batch_norm:
+                norm_name='BN'
+            else:
+                norm_name = 'cLN' if causal else 'gLN'
             self.norm1d = choose_layer_norm(norm_name, hidden_channels, causal=causal, eps=eps)
         if separable:
-            self.separable_conv1d = DepthwiseSeparableConv1d(hidden_channels, num_features, skip_channels=skip_channels, kernel_size=kernel_size, stride=stride, dilation=dilation, causal=causal, nonlinear=nonlinear, norm=norm, dual_head=dual_head, eps=eps)
+            self.separable_conv1d = DepthwiseSeparableConv1d(hidden_channels, num_features, skip_channels=skip_channels, kernel_size=kernel_size, stride=stride, dilation=dilation, causal=causal, nonlinear=nonlinear, norm=norm, use_batch_norm=use_batch_norm, dual_head=dual_head, eps=eps)
         else:
             if dual_head:
                 self.output_conv1d = nn.Conv1d(hidden_channels, num_features, kernel_size=kernel_size, dilation=dilation)
@@ -147,7 +150,7 @@ class ResidualBlock1d(nn.Module):
         return output, skip
 
 class DepthwiseSeparableConv1d(nn.Module):
-    def __init__(self, in_channels, out_channels=256, skip_channels=256, kernel_size=3, stride=2, dilation=1, causal=True, nonlinear=None, norm=True, dual_head=True, eps=EPS):
+    def __init__(self, in_channels, out_channels=256, skip_channels=256, kernel_size=3, stride=2, dilation=1, causal=True, nonlinear=None, norm=True,use_batch_norm=False, dual_head=True, eps=EPS):
         super().__init__()
 
         self.dual_head = dual_head
@@ -166,8 +169,11 @@ class DepthwiseSeparableConv1d(nn.Module):
             self.nonlinear = False
 
         if norm:
-            norm_name = 'cLN' if causal else 'gLN'
-            self.norm1d = choose_layer_norm(norm_name, in_channels, causal=causal, eps=eps)
+             if use_batch_norm:
+                 norm_name='BN'
+             else:
+                 norm_name = 'cLN' if causal else 'gLN'
+             self.norm1d = choose_layer_norm(norm_name, hidden_channels, causal=causal, eps=eps)
 
         if dual_head:
             self.output_pointwise_conv1d = nn.Conv1d(in_channels, out_channels, kernel_size=1, stride=1)
