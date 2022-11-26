@@ -11,7 +11,7 @@ Time dilated convolutional network.
 EPS = 1e-12
 
 class TimeDilatedConvNet(nn.Module):
-    def __init__(self, num_features, hidden_channels=256, skip_channels=256, kernel_size=3, num_blocks=3, num_layers=10, dilated=True, separable=False, causal=True, nonlinear=None, norm=True, eps=EPS):
+    def __init__(self, num_features, hidden_channels=256, skip_channels=256, kernel_size=3, num_blocks=3, num_layers=10, dilated=True, separable=False, causal=True,use_batch_norm=False, nonlinear=None, norm=True, eps=EPS):
         super().__init__()
 
         self.num_blocks = num_blocks
@@ -20,9 +20,9 @@ class TimeDilatedConvNet(nn.Module):
 
         for idx in range(num_blocks):
             if idx == num_blocks - 1:
-                net.append(TimeDilatedConvBlock1d(num_features, hidden_channels=hidden_channels, skip_channels=skip_channels, kernel_size=kernel_size, num_layers=num_layers, dilated=dilated, separable=separable, causal=causal, nonlinear=nonlinear, norm=norm, dual_head=False, eps=eps))
+                net.append(TimeDilatedConvBlock1d(num_features, hidden_channels=hidden_channels, skip_channels=skip_channels, kernel_size=kernel_size, num_layers=num_layers, dilated=dilated, separable=separable, causal=causal, nonlinear=nonlinear, norm=norm, use_batch_norm=use_batch_norm, dual_head=False, eps=eps))
             else:
-                net.append(TimeDilatedConvBlock1d(num_features, hidden_channels=hidden_channels, skip_channels=skip_channels, kernel_size=kernel_size, num_layers=num_layers, dilated=dilated, separable=separable, causal=causal, nonlinear=nonlinear, norm=norm, dual_head=True, eps=eps))
+                net.append(TimeDilatedConvBlock1d(num_features, hidden_channels=hidden_channels, skip_channels=skip_channels, kernel_size=kernel_size, num_layers=num_layers, dilated=dilated, separable=separable, causal=causal, nonlinear=nonlinear, norm=norm, use_batch_norm=use_batch_norm, dual_head=True, eps=eps))
 
         self.net = nn.Sequential(*net)
 
@@ -173,7 +173,7 @@ class DepthwiseSeparableConv1d(nn.Module):
                  norm_name='BN'
              else:
                  norm_name = 'cLN' if causal else 'gLN'
-             self.norm1d = choose_layer_norm(norm_name, hidden_channels, causal=causal, eps=eps)
+             self.norm1d = choose_layer_norm(norm_name, in_channels, causal=causal, eps=eps)
 
         if dual_head:
             self.output_pointwise_conv1d = nn.Conv1d(in_channels, out_channels, kernel_size=1, stride=1)
