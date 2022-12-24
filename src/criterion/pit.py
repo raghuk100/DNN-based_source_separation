@@ -16,6 +16,7 @@ def pit(criterion, input, target, n_sources=None, patterns=None, batch_mean=True
         loss (batch_size,): minimum loss for each data
         pattern (batch_size,): permutation indices
     """
+    patterns=patterns.to(input.device)
     if patterns is None:
         if n_sources is None:
             n_sources = input.size(1)
@@ -34,13 +35,15 @@ def pit(criterion, input, target, n_sources=None, patterns=None, batch_mean=True
 
     # possible_loss (batch_size, P)
     if hasattr(criterion, "maximize") and criterion.maximize:
-        loss, indices = torch.max(possible_loss, dim=1) # loss (batch_size,), indices (batch_size,)
+        loss, indices = torch.max(possible_loss, dim=1) # loss (batch_size,), indices (batch_size,).to(input.device)
     else:
-        loss, indices = torch.min(possible_loss, dim=1) # loss (batch_size,), indices (batch_size,)
+        loss, indices = torch.min(possible_loss, dim=1) # loss (batch_size,), indices (batch_size,).to(input.device)
 
     if batch_mean:
         loss = loss.mean(dim=0)
-
+#    print(input.device)
+    indices=indices.to(input.device)
+    loss=loss.to(input.device)
     return loss, patterns[indices]
 
 class PIT(nn.Module):

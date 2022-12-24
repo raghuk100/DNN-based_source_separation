@@ -58,6 +58,7 @@ parser.add_argument('--overwrite', type=int, default=0, help='0: NOT overwrite, 
 parser.add_argument('--seed', type=int, default=42, help='Random seed')
 
 def main(args):
+    print(args)
     set_seed(args.seed)
 
     train_dataset = WaveTrainDataset(args.wav_root, args.train_json_path)

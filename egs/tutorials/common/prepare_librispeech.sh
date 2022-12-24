@@ -32,7 +32,7 @@ else
     if [ ! -d "${librispeech_root}/${train_dataset}" ] ; then
         mkdir -p "${librispeech_root}/${train_dataset}"
     fi
-    wget ${train_url} -P "/tmp"
+    wget ${train_url} -P "/tmp" --no-check-certificate
     tar -xf "/tmp/${train_file}" -C "/tmp/"
     rm "/tmp/${train_file}"
     mv "/tmp/LibriSpeech/${train_dataset}/"* "${librispeech_root}/${train_dataset}/"
@@ -44,7 +44,7 @@ else
     if [ ! -d "${librispeech_root}/${valid_dataset}" ] ; then
         mkdir -p "${librispeech_root}/${valid_dataset}"
     fi
-    wget ${valid_url} -P "/tmp"
+    wget ${valid_url} -P "/tmp" --no-check-certificate
     tar -xf "/tmp/${valid_file}" -C "/tmp/"
     rm "/tmp/${valid_file}"
     mv "/tmp/LibriSpeech/${valid_dataset}/"* "${librispeech_root}/${valid_dataset}/"
@@ -56,7 +56,7 @@ else
     if [ ! -d "${librispeech_root}/${test_dataset}" ] ; then
         mkdir -p "${librispeech_root}/${test_dataset}"
     fi
-    wget ${test_url} -P "/tmp"
+    wget ${test_url} -P "/tmp" --no-check-certificate
     tar -xf "/tmp/${test_file}" -C "/tmp/"
     rm "/tmp/${test_file}"
     mv "/tmp/LibriSpeech/${test_dataset}/"* "${librispeech_root}/${test_dataset}/"

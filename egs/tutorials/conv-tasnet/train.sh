@@ -28,11 +28,14 @@ H=256
 B=128
 Sc=128
 P=3
-X=6
-R=3
+# Defaults here
+# X=6
+# R=3
+X=4
+R=2
 dilated=1
 separable=1
-causal=0
+causal=1
 sep_nonlinear='prelu'
 sep_norm=1
 use_batch_norm=1
@@ -50,7 +53,7 @@ max_norm=5
 batch_size=4
 epochs=100
 
-use_cuda=1
+use_cuda=0
 overwrite=0
 seed=111
 
